@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"github.com/creztfallen/compiler_api/cmd/api/auth"
 	"github.com/creztfallen/compiler_api/cmd/api/config"
+	"github.com/creztfallen/compiler_api/cmd/api/responses"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"time"
 )
 
-var userCollection *mongo.Collection = config.GetCollection(config.DB, "users")
+var userCollection = config.GetCollection(config.DB, "users")
 var validate = validator.New()
 
 func HashPassword(password string) string {
@@ -54,7 +54,7 @@ func CreateUser(c *fiber.Ctx) error {
 
 	//validate the request body
 	if err := c.BodyParser(&user); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(UserResponse{
+		return c.Status(http.StatusBadRequest).JSON(responses.DefaultResponse{
 			Status:  http.StatusBadRequest,
 			Message: "error",
 			Data:    &fiber.Map{"data": err.Error()}})
@@ -62,7 +62,7 @@ func CreateUser(c *fiber.Ctx) error {
 
 	//use the validator library to validate required fields
 	if validationErr := validate.Struct(&user); validationErr != nil {
-		return c.Status(http.StatusBadRequest).JSON(UserResponse{
+		return c.Status(http.StatusBadRequest).JSON(responses.DefaultResponse{
 			Status:  http.StatusBadRequest,
 			Message: "error",
 			Data:    &fiber.Map{"data": validationErr.Error()}})
@@ -81,13 +81,13 @@ func CreateUser(c *fiber.Ctx) error {
 
 	result, err := userCollection.InsertOne(ctx, newUser)
 	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(UserResponse{
+		return c.Status(http.StatusInternalServerError).JSON(responses.DefaultResponse{
 			Status:  http.StatusInternalServerError,
 			Message: "error",
 			Data:    &fiber.Map{"data": err.Error()}})
 	}
 
-	return c.Status(http.StatusCreated).JSON(UserResponse{
+	return c.Status(http.StatusCreated).JSON(responses.DefaultResponse{
 		Status:  http.StatusCreated,
 		Message: "success",
 		Data:    &fiber.Map{"data": result}})
@@ -96,7 +96,7 @@ func CreateUser(c *fiber.Ctx) error {
 func Login(c *fiber.Ctx) error {
 	var user User
 	if err := c.BodyParser(&user); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(UserResponse{
+		return c.Status(http.StatusBadRequest).JSON(responses.DefaultResponse{
 			Status:  http.StatusBadRequest,
 			Message: "error",
 			Data:    &fiber.Map{"data": err.Error()},
@@ -107,16 +107,15 @@ func Login(c *fiber.Ctx) error {
 	var foundUser User
 
 	err := userCollection.FindOne(context.TODO(), filter).Decode(&foundUser)
-	fmt.Println(err)
 	if err != nil {
-		return c.Status(http.StatusUnauthorized).JSON(UserResponse{
+		return c.Status(http.StatusUnauthorized).JSON(responses.DefaultResponse{
 			Status:  http.StatusUnauthorized,
 			Message: "error",
 			Data:    &fiber.Map{"data": err}})
 	}
 	passwordIsValid, msg := VerifyPassword(user.Password, foundUser.Password)
 	if !passwordIsValid {
-		return c.Status(http.StatusUnauthorized).JSON(UserResponse{
+		return c.Status(http.StatusUnauthorized).JSON(responses.DefaultResponse{
 			Status:  http.StatusUnauthorized,
 			Message: msg,
 			Data:    nil})
@@ -124,7 +123,7 @@ func Login(c *fiber.Ctx) error {
 
 	token, err := auth.GenerateJWT(foundUser.Email, foundUser.Username)
 
-	return c.Status(http.StatusOK).JSON(UserResponse{
+	return c.Status(http.StatusOK).JSON(responses.DefaultResponse{
 		Status:  http.StatusOK,
 		Message: "success",
 		Data: &fiber.Map{
