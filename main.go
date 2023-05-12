@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/creztfallen/compiler_api/cmd/api/compile"
 	"github.com/creztfallen/compiler_api/cmd/api/config"
 	"github.com/creztfallen/compiler_api/cmd/api/users"
 	"github.com/gofiber/fiber/v2"
@@ -12,7 +13,7 @@ func main() {
 	config.ConnectDB()
 
 	users.UserRoute(app)
-
+	compile.CompileRoute(app)
 	err := app.Listen(":6000")
 	if err != nil {
 		log.Fatal(err)
