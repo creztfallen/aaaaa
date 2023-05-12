@@ -1,0 +1,7 @@
+version: '3'
+services:
+  sentinel:
+    container_name: sentinel
+    image: creztfallen/compiler-env
+    volumes:
+      - /home/mmoreno/Documents/projects/compiler_api/cmd/api/compile/release:/root/release/
