@@ -5,7 +5,7 @@ WORKDIR /root
 #copying any kind of dependencies
 COPY ./cmd/api/compile/dependencies .
 #copying downloaded filessudo
-COPY ./cmd/api/compile/config-file-downloads .
+COPY ./cmd/api/compile/config-file-downloads/ .
 
 COPY ./cmd/api/compile/release .
 

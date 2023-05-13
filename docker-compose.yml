@@ -5,3 +5,4 @@ services:
     image: creztfallen/compiler-env
     volumes:
       - /home/mmoreno/Documents/projects/compiler_api/cmd/api/compile/release:/root/release/
+      - /home/mmoreno/Documents/projects/compiler_api/cmd/api/compile/config-file-downloads:/root/config-file-downloads/

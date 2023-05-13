@@ -32,31 +32,12 @@ func Compile(c *fiber.Ctx) error {
 	counter++
 	mutex.Unlock()
 
-	sess, err := session.NewSession(&aws.Config{
-		Region:           aws.String("sa-east-1"),
-		S3ForcePathStyle: aws.Bool(true),
-		Credentials:      credentials.NewStaticCredentials(config.AWS_KEY(), config.AWS_SECRET_KEY(), ""),
-	})
-	if err != nil {
-		return err
-	}
-
-	s3Client := s3.New(sess)
-
-	err = utils.UploadFileHandler(c)
+	err := utils.UploadFileHandler(c)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(responses.DefaultResponse{
 			Status:  http.StatusInternalServerError,
 			Message: "couldn't save the file",
 			Data:    nil})
-	}
-
-	output, _ := utils.ExecChain("sentinel")
-	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(responses.DefaultResponse{
-			Status:  http.StatusInternalServerError,
-			Message: "Unexpected error while dealing with the sentinel",
-			Data:    &fiber.Map{"error": output}})
 	}
 
 	time.Sleep(5 * time.Second)
@@ -69,6 +50,17 @@ func Compile(c *fiber.Ctx) error {
 			Message: "Couldn't read the file",
 			Data:    nil})
 	}
+
+	sess, err := session.NewSession(&aws.Config{
+		Region:           aws.String("sa-east-1"),
+		S3ForcePathStyle: aws.Bool(true),
+		Credentials:      credentials.NewStaticCredentials(config.AWS_KEY(), config.AWS_SECRET_KEY(), ""),
+	})
+	if err != nil {
+		return err
+	}
+
+	s3Client := s3.New(sess)
 
 	uploadInput := &s3.PutObjectInput{
 		Bucket: aws.String(config.AWS_BUCKET()),
