@@ -1,0 +1,10 @@
+version: '3'
+services:
+  sentinel:
+    container_name: sentinel
+    image: creztfallen/compiler-env
+    env_file:
+      - .env
+    volumes:
+      - $(RELEASE_PATH)/root/release/
+      - $(CONFIG_FILES_PATH):/root/config-file-downloads/
